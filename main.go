@@ -5,17 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 )
-
-type option string
 
 const (
 	myKey = "xtron46cfabrica460123456789"
-)
-
-const (
-	encript    option = "+"
-	desencript option = "-"
 )
 
 func main() {
@@ -33,7 +27,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = myCrypto(&dataFile, encript, string(dataKey))
+	err = encript(&dataFile, string(dataKey))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = crearArchivoEncriptado(dataFile, "image_encript.jpg")
 
 	if err != nil {
 		log.Fatal(err)
@@ -41,7 +41,13 @@ func main() {
 
 	fmt.Printf("\tSe encripto con éxito")
 
-	err = myCrypto(&dataFile, desencript, string(dataKey))
+	err = desencript(&dataFile, string(dataKey))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = crearArchivoEncriptado(dataFile, "image_desencript.jpg")
 
 	if err != nil {
 		log.Fatal(err)
@@ -59,60 +65,76 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = myCrypto(&dataFile, encript, string(dataKey))
+	err = encript(&dataFile, string(dataKey))
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("\tSe encripto con éxito\n")
+	fmt.Printf("\tSe encripto con éxito")
 
-	err = myCrypto(&dataFile, desencript, string(dataKey))
+	err = desencript(&dataFile, string(dataKey))
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("\tSe desencripto con éxito\n")
+	fmt.Printf("\tSe desencripto con éxito")
+	fmt.Println()
 
 }
 
-func myCrypto(b *[]byte, sign option, key string) (err error) {
+func encript(b *[]byte, key string) (err error) {
 
 	if key != myKey {
-		err = errors.New("llave de autenticacion incorrecta")
+		err = errors.New("llave invalida")
 		return
 	}
 
-	switch sign {
-	case "+":
+	for i := range *b {
 
-		for i := range *b {
+		bInt := int((*b)[i])
 
-			bInt := int((*b)[i])
+		bInt++
 
-			bInt++
+		(*b)[i] = byte(bInt)
 
-			(*b)[i] = byte(bInt)
+	}
+	return
+}
 
-		}
+func desencript(b *[]byte, key string) (err error) {
 
-	case "-":
+	if key != myKey {
+		err = errors.New("llave invalida")
+		return
+	}
 
-		for i := range *b {
+	for i := range *b {
 
-			bInt := int((*b)[i])
+		bInt := int((*b)[i])
 
-			bInt--
+		bInt--
 
-			(*b)[i] = byte(bInt)
+		(*b)[i] = byte(bInt)
 
-		}
+	}
+	return
+}
 
-	default:
+func crearArchivoEncriptado(dataFile []byte, nameFile string) (err error) {
 
-		err = errors.New("signo invalido")
+	newFile, err := os.Create(nameFile)
 
+	if err != nil {
+		return
+	}
+
+	defer newFile.Close()
+
+	_, err = newFile.Write(dataFile)
+
+	if err != nil {
 		return
 	}
 
